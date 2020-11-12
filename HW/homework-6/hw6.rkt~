@@ -1,0 +1,17 @@
+;; Homework 6
+;;
+;; Yifei Li
+;; liyifei
+
+#lang typed/racket
+(require "../include/cs151-core.rkt")
+(require typed/test-engine/racket-tests)
+
+(define-type TV (Integer -> String))
+(: friday-night : TV)
+(define (friday-night channel)
+  (match channel
+    [5 "NBC Evening News"]
+    [7 "Game of Thrones"]
+    [33 "ESPN SportsCenter"]
+    [_ (error "wrong channel number")]))

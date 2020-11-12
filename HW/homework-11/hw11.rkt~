@@ -1,0 +1,40 @@
+;; Homework 11
+  
+;;
+;; Yifei Li
+;; liyifei
+
+#lang typed/racket
+(require "../include/cs151-core.rkt")
+(require typed/test-engine/racket-tests)
+
+(define-type Vertex Integer)
+
+(define-struct Graph
+  ([n : Integer]
+   [adj : (Vectorof (Listof Vertex))]))
+
+(: degree : Graph Vertex -> Integer)
+(define (degree g v)
+  (length (get-nbrs g v)))
+
+(: get-nbrs : Graph Vertex -> (Listof Vertex))
+(define (get-nbrs g v)
+  (vector-ref (Graph-adj g) v))
+
+(: all-vtxs : Graph -> (Listof Vertex))
+(define (all-vtxs g)
+  (build-list (Graph-n g) (lambda ([x : Integer]) x)))
+
+
+
+(: count-degree : Graph Integer -> Integer)
+;; on input g and d, outputs the number of vertices in g with degree d
+(define (count-degree g d)
+  (vector-count (lambda ([nbrs : (Listof Vertex)]) (= d (length nbrs))) (Graph-adj g)))
+
+
+
+(: vec-append : (All (A) (Vectorof A) (Vectorof A) -> (Vectorof A)))
+(define (vec-append vec-one vec-two)
+  (list->vector (append (vector->list vec-one) (vector->list vec-two))))

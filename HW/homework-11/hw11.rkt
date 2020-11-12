@@ -1,0 +1,121 @@
+;; Homework 11
+  
+;;
+;; Yifei Li
+;; liyifei
+
+#lang typed/racket
+(require "../include/cs151-core.rkt")
+(require typed/test-engine/racket-tests)
+(require "../include/BST.rkt")
+
+(define-type Vertex Integer)
+
+(define-struct Graph
+  ([n : Integer]
+   [adj : (Vectorof (Listof Vertex))]))
+
+(: degree : Graph Vertex -> Integer)
+(define (degree g v)
+  (length (get-nbrs g v)))
+
+(: get-nbrs : Graph Vertex -> (Listof Vertex))
+(define (get-nbrs g v)
+  (vector-ref (Graph-adj g) v))
+
+(: all-vtxs : Graph -> (Listof Vertex))
+(define (all-vtxs g)
+  (build-list (Graph-n g) (lambda ([x : Integer]) x)))
+
+(: vec-append : (All (A) (Vectorof A) (Vectorof A) -> (Vectorof A)))
+(define (vec-append vec-one vec-two)
+  (list->vector (append (vector->list vec-one) (vector->list vec-two))))
+
+
+;; Problem 1a
+(: count-degree : Graph Integer -> Integer)
+;; on input g and d, outputs the number of vertices in g with degree d
+(define (count-degree g d)
+  (vector-count (lambda ([nbrs : (Listof Vertex)]) (= d (length nbrs))) (Graph-adj g)))
+
+;; Problem 1b
+(: clique? : Graph -> Boolean)
+(define (clique? g)
+  (= (count-degree g (- (Graph-n g) 1)) (Graph-n g)))
+
+;; Problem 1c
+;; T(n, m) = (m_1 + m_2 + m_3 + m_4 + ... + m_n) --> total n elements
+;;         = O(m)
+
+;; Problem 2
+(: add-vertex : Graph -> Graph)
+(define (add-vertex g)
+  (Graph (+ (Graph-n g) 1) (vec-append
+                            (vector-map  (lambda ([lst : (Listof Vertex)]) (append lst (list (Graph-n g))))
+                                         (Graph-adj g))
+                            (vector (all-vtxs g)))))
+
+(define test-graph (Graph 3 (vector '(1 2) '(0 2) '(0 1))))
+(check-expect (add-vertex test-graph) (Graph 4 '#((1 2 3) (0 2 3) (0 1 3) (0 1 2))))
+
+;; Problem 3
+(define-struct Activity
+  ([desc : String]
+   [day-of-year : Integer]
+   [loc : String]))
+
+;; Problem 3a
+(define-type Calendar (BST Activity))
+(: act-lte? : Activity Activity -> Boolean)
+(define (act-lte? act1 act2)
+  (<= (Activity-day-of-year act1) (Activity-day-of-year act2)))
+
+;; Problem 3b
+(define rand-desc (vector "Lecture" "Lab" "Party" "Exam" "Dinner" "Shopping"))
+(define rand-loc (vector "Home" "Online" "UChicago" "Mall"))
+
+(: random-activity : Integer -> Activity)
+(define (random-activity n)
+  (Activity
+   (vector-ref rand-desc (random 6))
+   (+ 1 (random 365))
+   (vector-ref rand-loc (random 4))))
+
+(: singleton : (All (A) A (A A -> Boolean) -> (BST A)))
+(define (singleton val lte)
+  (BST lte (Node val 'none 'none)))
+
+(: insert-all : All(A) (Listof A) (BST A) -> (BST A))
+(define (insert-all my-list my-bst)
+  (cond
+    [(empty? my-list) my-bst]
+    [else (insert-all (rest my-list) (BST-insert (first my-list) my-bst))]))
+
+(: list->BST : (All (A) (Listof A) (A A -> Boolean) -> (BST A)))
+(define (list->BST my-list lte)
+  (insert-all (rest my-list) (singleton (first my-list) lte)))
+
+(: random-calender : Calendar)
+(define random-calender
+  (list->BST (build-list 5000 random-activity) act-lte?))
+
+;; Problem 3c
+
+(: make-activity : Integer -> Activity)
+(define (make-activity day)
+  (Activity "" day ""))
+
+(: go-on-vacation : Calendar Integer Integer -> Calendar)
+(define (go-on-vacation cal start end)
+  (cond
+    [(> start end) (error "go-on-vacation: end date must after start date")]
+    [else
+     (match (BST-search cal (make-activity start))
+       ['none (if (= start end)
+                  cal
+                  (go-on-vacation cal (+ 1 start) end))]
+       [_ (go-on-vacation (BST-delete (make-activity start) cal) start end)])]))
+
+(BST->list (go-on-vacation random-calender 200 300))
+
+(test)

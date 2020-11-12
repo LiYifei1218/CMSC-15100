@@ -1,0 +1,47 @@
+;; Homework 5
+;;
+;; Yifei Li
+;; liyifei
+
+#lang typed/racket
+(require "../include/cs151-core.rkt")
+(require typed/test-engine/racket-tests)
+
+
+(define-type Description String)
+
+(define-type Day-of-Week
+  (U 'Monday 'Tuesday 'Wednesday 'Thursday 'Friday 'Saturday 'Sunday))
+
+(define-type Location String)
+
+(define-struct Activity
+  ([description : Description]
+   [day-of-week : Day-of-Week]
+   [location : Location]))
+
+(define-type Calendar (Listof Activity))
+
+(: weekday? : Activity -> Boolean)
+(define (weekday? activity)
+  (match activity
+    [(Activity _ 'Saturday _) #f]
+    [(Activity _ 'Sunday _) #f]
+    [_ #t]))
+
+(: weekday-activities : Calendar -> Calendar)
+(define (weekday-activities cal)
+  (filter weekday? cal))
+
+
+(define lecture1 (Activity "CS151 Lecture" 'Monday "Online Zoom Meeting"))
+(define lecture2 (Activity "CS151 Lecture" 'Wednesday "Online Zoom Meeting"))
+(define lecture3 (Activity "CS151 Lecture" 'Friday "Online Zoom Meeting"))
+(define lab (Activity "CS151 Lab" 'Monday "Online Zoom Meeting"))
+(define party (Activity "Party" 'Saturday "Game Party on Discord"))
+(: My-Summer : Calendar)
+(define My-Summer (list lecture1 lecture2 lecture3 lab party))
+
+(weekday-activities My-Summer)
+
+(check-expect (weekday? lecture1) #t)
